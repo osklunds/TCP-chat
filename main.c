@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
         port = htons(port);
 
         run_server_program(port);
-    } else if (argc == 3) {
+    } else if (argc == 4) {
         struct sockaddr_in sa;
 
         char *ip_string = argv[1];
@@ -29,7 +29,9 @@ int main(int argc, char *argv[]) {
         port = htons(port);
         sa.sin_port = port;
 
-        run_client_program(sa);
+        char *name = argv[3];
+
+        run_client_program(sa, name);
     } else {
         printf("Invalid number of arguments.\n");
         exit(1);

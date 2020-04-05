@@ -17,17 +17,19 @@ struct client {
     int max_fd;
     fd_set fds_before_select;
     fd_set fds_after_select;
+
+    char *name;
 };
 
-static struct client create_client(struct sockaddr_in server_sa);
+static struct client create_client(struct sockaddr_in server_sa, char name[]);
 static int connect_to_server(struct sockaddr_in server_sa);
 static void wait_on_select_and_update_fds(struct client *self);
 static void handle_incoming_data(struct client *self);
 static void handle_user_input(struct client *self);
 
 
-void run_client_program(struct sockaddr_in server_sa) {
-    struct client cli = create_client(server_sa);
+void run_client_program(struct sockaddr_in server_sa, char name[]) {
+    struct client cli = create_client(server_sa, name);
 
     while (1) {
         wait_on_select_and_update_fds(&cli);
@@ -36,7 +38,7 @@ void run_client_program(struct sockaddr_in server_sa) {
     }
 }
 
-static struct client create_client(struct sockaddr_in server_sa) {
+static struct client create_client(struct sockaddr_in server_sa, char name[]) {
     struct client cli;
     cli.server_fd = connect_to_server(server_sa);
 
@@ -50,6 +52,8 @@ static struct client create_client(struct sockaddr_in server_sa) {
     FD_SET(STDIN_FILENO, &cli.fds_before_select);
 
     FD_ZERO(&cli.fds_after_select);
+
+    cli.name = name;
 
     return cli;
 }

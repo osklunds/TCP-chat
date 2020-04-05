@@ -8,9 +8,7 @@
 #include <netinet/in.h>
 #include <sys/select.h>
 
-#define LISTEN_BACKLOG 5
-#define MAX_NUM_CONNECTIONS 10
-#define RECV_BUF_SIZE 128
+#include "constants.h"
 
 
 int setup_server_listen_socket(int port);
@@ -74,7 +72,7 @@ int setup_server_listen_socket(int port) {
 
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    addr.sin_port = htons(port);
+    addr.sin_port = port;
 
     if (bind(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
         perror("bind() failed.");
@@ -97,6 +95,12 @@ void check_and_accept_client(fd_set *fds,
     if (FD_ISSET(listen_fd, fds) && 
         *number_of_connections < MAX_NUM_CONNECTIONS) {
         int client_fd = accept(listen_fd, NULL, 0);
+
+        if (client_fd < 0) {
+            perror("Errow with accept()");
+            exit(1);
+        }
+
         connections[*number_of_connections] = client_fd;
         (*number_of_connections)++;
 

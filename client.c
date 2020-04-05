@@ -15,8 +15,8 @@
 struct client {
     int server_fd;
     int max_fd;
-    fd_set default_fds;
-    fd_set fds;
+    fd_set fds_before_select;
+    fd_set fds_after_select;
 };
 
 static struct client create_client(struct sockaddr_in server_sa);
@@ -45,11 +45,11 @@ static struct client create_client(struct sockaddr_in server_sa) {
         cli.max_fd = STDIN_FILENO;
     }
 
-    FD_ZERO(&cli.default_fds);
-    FD_SET(cli.server_fd, &cli.default_fds);
-    FD_SET(STDIN_FILENO, &cli.default_fds);
+    FD_ZERO(&cli.fds_before_select);
+    FD_SET(cli.server_fd, &cli.fds_before_select);
+    FD_SET(STDIN_FILENO, &cli.fds_before_select);
 
-    FD_ZERO(&cli.fds);
+    FD_ZERO(&cli.fds_after_select);
 
     return cli;
 }
@@ -71,16 +71,16 @@ static int connect_to_server(struct sockaddr_in server_sa) {
 }
 
 static void wait_on_select_and_update_fds(struct client *self) {
-    self->fds = self->default_fds;
+    self->fds_after_select = self->fds_before_select;
 
-    if (select(self->max_fd + 1, &self->fds, NULL, NULL, NULL) < 0) {
+    if (select(self->max_fd + 1, &self->fds_after_select, NULL, NULL, NULL) < 0) {
         perror("select() failed");
         exit(1);
     }
 }
 
 static void handle_incoming_data(struct client *self) {
-    if (FD_ISSET(self->server_fd, &self->fds)) {
+    if (FD_ISSET(self->server_fd, &self->fds_after_select)) {
         char data[MSG_BUF_SIZE];
 
         int len = recv(self->server_fd, data, MSG_BUF_SIZE, 0);
@@ -101,7 +101,7 @@ static void handle_incoming_data(struct client *self) {
 }
 
 static void handle_user_input(struct client *self) {
-    if (FD_ISSET(STDIN_FILENO, &self->fds)) {
+    if (FD_ISSET(STDIN_FILENO, &self->fds_after_select)) {
         char data[MSG_BUF_SIZE];
 
         int len = read(STDIN_FILENO, data, MSG_BUF_SIZE);

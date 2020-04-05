@@ -11,53 +11,50 @@
 #include "constants.h"
 
 
-int setup_server_listen_socket(int port);
-void handle_incoming_data(fd_set *fds, 
-                          int number_of_connections, 
-                          int connections[]);
-void check_and_accept_client(fd_set *fds, 
-                             int listen_fd, 
-                             int *number_of_connections, 
-                             int connections[]);
-void sent_to_all_except(char data[], 
-                        int len, 
-                        int number_of_connections, 
-                        int connections[], 
-                        int except_index);
+struct server {
+    int listen_fd;
+
+    int client_fds[MAX_NUM_CONNECTIONS];
+    int number_of_clients;
+
+    int max_fd;
+    fd_set fds_before_select;
+    fd_set fds_after_select;
+};
+
+static struct server create_server(int port);
+static int setup_listen_socket(int port);
+static void wait_on_select_and_update_fds(struct server *self);
+static void accept_client(struct server *self);
+static void handle_incoming_data(struct server *self);
+static void send_to_all_except(struct server *self, char data[], int len, int except_index);
+
 
 void run_server_program(int port) {
-    int listen_fd = setup_server_listen_socket(port);
-
-    int connections[MAX_NUM_CONNECTIONS];
-    int number_of_connections = 0;
+    struct server serv = create_server(port);
 
     while (1) {
-        fd_set fds;
-        FD_ZERO(&fds);
-        FD_SET(listen_fd, &fds);
-        int max_fd = listen_fd;
-
-        // Add all connections to fds
-        for (int i = 0; i < number_of_connections; i++) {
-            int current_fd = connections[i];
-            FD_SET(current_fd, &fds);
-            if (max_fd < current_fd) {
-                max_fd = current_fd;
-            }
-        }
-
-        if (select(max_fd + 1, &fds, NULL, NULL, NULL) < 0) {
-            perror("select() failed.");
-            exit(1);
-        }
-
-        check_and_accept_client(&fds, listen_fd, &number_of_connections, connections);
-
-        handle_incoming_data(&fds, number_of_connections, connections);
+        wait_on_select_and_update_fds(&serv);
+        accept_client(&serv);
+        handle_incoming_data(&serv);
     }
 }
 
-int setup_server_listen_socket(int port) {
+static struct server create_server(int port) {
+    struct server serv;
+
+    serv.listen_fd = setup_listen_socket(port);
+    serv.max_fd = serv.listen_fd;
+
+    FD_ZERO(&serv.fds_before_select);
+    FD_SET(serv.listen_fd, &serv.fds_before_select);
+
+    return serv;
+}
+
+
+
+static int setup_listen_socket(int port) {
     // Create the socket file descriptor
     int fd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -88,33 +85,44 @@ int setup_server_listen_socket(int port) {
     return fd;
 }
 
-void check_and_accept_client(fd_set *fds, 
-                             int listen_fd, 
-                             int *number_of_connections, 
-                             int connections[]) {
-    if (FD_ISSET(listen_fd, fds) && 
-        *number_of_connections < MAX_NUM_CONNECTIONS) {
-        int client_fd = accept(listen_fd, NULL, 0);
+static void wait_on_select_and_update_fds(struct server *self) {
+    self->fds_after_select = self->fds_before_select;
+
+    if (select(self->max_fd + 1, &self->fds_after_select, NULL, NULL, NULL) < 0) {
+        perror("select() failed.");
+        exit(1);
+    }
+}
+
+
+
+static void accept_client(struct server *self) {
+    if (FD_ISSET(self->listen_fd, &self->fds_after_select) && 
+        self->number_of_clients < MAX_NUM_CONNECTIONS) {
+        int client_fd = accept(self->listen_fd, NULL, 0);
 
         if (client_fd < 0) {
             perror("Errow with accept()");
             exit(1);
         }
+        
+        self->client_fds[self->number_of_clients] = client_fd;
+        self->number_of_clients++;
 
-        connections[*number_of_connections] = client_fd;
-        (*number_of_connections)++;
+        if (client_fd > self->max_fd) {
+            self->max_fd = client_fd;
+            FD_SET(client_fd, &self->fds_before_select);
+        }
 
         printf("Accepted a client\n");
     }
 }
 
-void handle_incoming_data(fd_set *fds, 
-                          int number_of_connections, 
-                          int connections[]) {
-    for (int i = 0; i < number_of_connections; i++) {
-        int current_fd = connections[i];
+static void handle_incoming_data(struct server *self) {
+    for (int i = 0; i < self->number_of_clients; i++) {
+        int current_fd = self->client_fds[i];
 
-        if (FD_ISSET(current_fd, fds)) {
+        if (FD_ISSET(current_fd, &self->fds_after_select)) {
             char data[MSG_BUF_SIZE];
 
             int len = recv(current_fd, data, MSG_BUF_SIZE, 0);
@@ -128,22 +136,18 @@ void handle_incoming_data(fd_set *fds,
                 // TODO: Close connection
             }
 
-            sent_to_all_except(data, len, number_of_connections, connections, i);
+            send_to_all_except(self, data, len, i);
         }
     }
 }
 
-void sent_to_all_except(char data[], 
-                        int len, 
-                        int number_of_connections, 
-                        int connections[], 
-                        int except_index) {
-    for (int j = 0; j < number_of_connections; j++) {
-        if (j == except_index) {
+static void send_to_all_except(struct server *self, char data[], int len, int except_index) {
+    for (int i = 0; i < self->number_of_clients; i++) {
+        if (i == except_index) {
             continue;
         }
 
-        int current_fd = connections[j];
+        int current_fd = (self->client_fds)[i];
         ssize_t send_len = send(current_fd, data, len, 0);
 
         if (send_len < 0) {

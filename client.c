@@ -116,13 +116,14 @@ static void handle_user_input(struct client *self) {
         }
 
         data[len] = 0;
-
+        
         char data_to_send[MSG_BUF_SIZE];
-        strcat(data_to_send, self->name);
-        strcat(data_to_send, ": ");
-        strcat(data_to_send, data);
-        len = strlen(data_to_send);
+        strlcpy(data_to_send, self->name, MSG_BUF_SIZE);
+        strlcat(data_to_send, ": ", MSG_BUF_SIZE);
+        strlcat(data_to_send, data, MSG_BUF_SIZE);
 
+        len = strlen(data_to_send);
+        
         ssize_t send_len = send(self->server_fd, data_to_send, len, 0);
 
         if (send_len < 0) {

@@ -15,6 +15,9 @@
 
 void run_server_program(int port);
 int setup_server_listen_socket(int port);
+void handle_incoming_data(fd_set *fds, 
+                          int number_of_connections, 
+                          int connections[]);
 void check_and_accept_client(fd_set *fds, 
                              int listen_fd, 
                              int *number_of_connections, 
@@ -59,27 +62,7 @@ void run_server_program(int port) {
 
         check_and_accept_client(&fds, listen_fd, &number_of_connections, connections);
 
-        // Handle received data
-        for (int i = 0; i < number_of_connections; i++) {
-            int current_fd = connections[i];
-
-            if (FD_ISSET(current_fd, &fds)) {
-                char data[RECV_BUF_SIZE];
-
-                int len = recv(current_fd, data, RECV_BUF_SIZE, 0);
-
-                if (len < 0) {
-                    perror("Error with recv().");
-                    exit(1);
-                }
-
-                if (len == 0) {
-                    // TODO: Close connection
-                }
-
-                sent_to_all_except(data, len, number_of_connections, connections, i);
-            }
-        }
+        handle_incoming_data(&fds, number_of_connections, connections);
     }
 }
 
@@ -125,6 +108,31 @@ void check_and_accept_client(fd_set *fds,
         (*number_of_connections)++;
 
         printf("Accepted a client\n");
+    }
+}
+
+void handle_incoming_data(fd_set *fds, 
+                          int number_of_connections, 
+                          int connections[]) {
+    for (int i = 0; i < number_of_connections; i++) {
+        int current_fd = connections[i];
+
+        if (FD_ISSET(current_fd, fds)) {
+            char data[RECV_BUF_SIZE];
+
+            int len = recv(current_fd, data, RECV_BUF_SIZE, 0);
+
+            if (len < 0) {
+                perror("Error with recv().");
+                exit(1);
+            }
+
+            if (len == 0) {
+                // TODO: Close connection
+            }
+
+            sent_to_all_except(data, len, number_of_connections, connections, i);
+        }
     }
 }
 

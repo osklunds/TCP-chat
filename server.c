@@ -115,9 +115,9 @@ void handle_incoming_data(fd_set *fds,
         int current_fd = connections[i];
 
         if (FD_ISSET(current_fd, fds)) {
-            char data[RECV_BUF_SIZE];
+            char data[MSG_BUF_SIZE];
 
-            int len = recv(current_fd, data, RECV_BUF_SIZE, 0);
+            int len = recv(current_fd, data, MSG_BUF_SIZE, 0);
 
             if (len < 0) {
                 perror("Error with recv().");

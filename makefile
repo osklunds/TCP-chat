@@ -1,7 +1,17 @@
 
-run:
-	gcc main.c -o main.o
-	./main.o
+CC       = gcc
+CFLAGS   = -Wall
+LDFLAGS  = 
+OBJFILES = server.o main.o
+TARGET   = program.o
 
-build:
-	gcc main.c -o main.o
+all: $(TARGET)
+
+$(TARGET): $(OBJFILES)
+	$(CC) $(CFLAGS) -o $(TARGET) $(OBJFILES) $(LDFLAGS)
+
+clean:
+	rm -f $(OBJFILES) $(TARGET) *~
+
+run: all
+	./program.o

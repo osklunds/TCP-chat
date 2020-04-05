@@ -76,8 +76,12 @@ void run_server_program(int port) {
                     // TODO: Close connection
                 }
 
-                // Send received data to all clients
+                // Send received data to all clients except the sending one
                 for (int j = 0; j < number_of_connections; j++) {
+                    if (j == i) {
+                        continue;
+                    }
+
                     int current_fd = connections[j];
                     ssize_t send_len = send(current_fd, data, len, 0);
 

@@ -19,6 +19,11 @@ void check_and_accept_client(fd_set *fds,
                              int listen_fd, 
                              int *number_of_connections, 
                              int connections[]);
+void sent_to_all_except(char data[], 
+                        int len, 
+                        int number_of_connections, 
+                        int connections[], 
+                        int except_index);
 
 int main() {
     printf("Hello world\n");
@@ -72,24 +77,7 @@ void run_server_program(int port) {
                     // TODO: Close connection
                 }
 
-                // Send received data to all clients except the sending one
-                for (int j = 0; j < number_of_connections; j++) {
-                    if (j == i) {
-                        continue;
-                    }
-
-                    int current_fd = connections[j];
-                    ssize_t send_len = send(current_fd, data, len, 0);
-
-                    if (send_len < 0) {
-                        perror("Error with send().");
-                        exit(1);
-                    }
-
-                    if (send_len == 0) {
-                        // TODO: Close connection
-                    }
-                }
+                sent_to_all_except(data, len, number_of_connections, connections, i);
             }
         }
     }
@@ -137,5 +125,29 @@ void check_and_accept_client(fd_set *fds,
         (*number_of_connections)++;
 
         printf("Accepted a client\n");
+    }
+}
+
+void sent_to_all_except(char data[], 
+                        int len, 
+                        int number_of_connections, 
+                        int connections[], 
+                        int except_index) {
+    for (int j = 0; j < number_of_connections; j++) {
+        if (j == except_index) {
+            continue;
+        }
+
+        int current_fd = connections[j];
+        ssize_t send_len = send(current_fd, data, len, 0);
+
+        if (send_len < 0) {
+            perror("Error with send().");
+            exit(1);
+        }
+
+        if (send_len == 0) {
+            // TODO: Close connection
+        }
     }
 }

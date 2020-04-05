@@ -1,10 +1,11 @@
 
 # TCP-chat
 
-## Todos
+## Features
 
-- Linked list
-- Client
-- Handle closed connections
-- Sequencing for receive and send (difficult)
-- Command line arguments
+- [X] Names
+- [ ] Linked list
+- [X] Client
+- [ ] Handle closed connections
+- [ ] Sequencing for receive and send (difficult)
+- [X] Command line arguments

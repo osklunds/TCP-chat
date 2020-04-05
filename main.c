@@ -15,6 +15,10 @@
 
 void run_server_program(int port);
 int setup_server_listen_socket(int port);
+void check_and_accept_client(fd_set *fds, 
+                             int listen_fd, 
+                             int *number_of_connections, 
+                             int connections[]);
 
 int main() {
     printf("Hello world\n");
@@ -48,15 +52,7 @@ void run_server_program(int port) {
             exit(1);
         }
 
-        // Accept a new client
-        if (FD_ISSET(listen_fd, &fds) && 
-            number_of_connections < MAX_NUM_CONNECTIONS) {
-            int client_fd = accept(listen_fd, NULL, 0);
-            connections[number_of_connections] = client_fd;
-            number_of_connections++;
-
-            printf("Accepted a client\n");
-        }
+        check_and_accept_client(&fds, listen_fd, &number_of_connections, connections);
 
         // Handle received data
         for (int i = 0; i < number_of_connections; i++) {
@@ -128,4 +124,18 @@ int setup_server_listen_socket(int port) {
     }
 
     return fd;
+}
+
+void check_and_accept_client(fd_set *fds, 
+                             int listen_fd, 
+                             int *number_of_connections, 
+                             int connections[]) {
+    if (FD_ISSET(listen_fd, fds) && 
+        *number_of_connections < MAX_NUM_CONNECTIONS) {
+        int client_fd = accept(listen_fd, NULL, 0);
+        connections[*number_of_connections] = client_fd;
+        (*number_of_connections)++;
+
+        printf("Accepted a client\n");
+    }
 }

@@ -1,7 +1,7 @@
 
 # TCP-chat
 
-This is a small command line chat client based on TCP.
+This is a small command line chat program based on TCP.
 
 ## Instructions
 

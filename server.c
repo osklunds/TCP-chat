@@ -9,6 +9,7 @@
 #include <sys/select.h>
 
 #include "constants.h"
+#include "list.h"
 
 
 struct server {

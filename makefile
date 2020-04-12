@@ -2,7 +2,7 @@
 CC       = gcc
 CFLAGS   = -Wall
 LDFLAGS  = 
-OBJFILES = client.o server.o main.o
+OBJFILES = list.o client.o server.o main.o
 TARGET   = program.o
 
 all: $(TARGET)

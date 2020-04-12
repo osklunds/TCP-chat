@@ -9,9 +9,17 @@
 
 #include "server.h"
 #include "client.h"
+#include "list.h"
 
 
 int main(int argc, char *argv[]) {
+    struct list lst = create_list();
+    insert(&lst, 2);
+
+    printf("%d\n", size(&lst));
+
+    return 0;
+
     if (argc == 2) {
         char *port_string = argv[1];
         int port = strtol(port_string, NULL, 10);

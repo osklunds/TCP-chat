@@ -11,7 +11,6 @@ struct list {
     struct node *head;  
 };
 
-struct list create_list();
 void append(struct list *self, int value);
 int contains(struct list *self, int value);
 int size(struct list *self);

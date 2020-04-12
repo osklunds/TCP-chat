@@ -8,14 +8,6 @@ struct node *create_node() {
     return calloc(1, sizeof(struct node));
 }
 
-struct list create_list() {
-    struct list lst;
-
-    lst.head = NULL;
-
-    return lst;
-}
-
 void append(struct list *self, int value) {
     if (self->head == NULL) {
         self->head = create_node();

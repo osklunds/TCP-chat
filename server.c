@@ -15,8 +15,7 @@
 struct server {
     int listen_fd;
 
-    int client_fds[MAX_NUM_CONNECTIONS];
-    int number_of_clients;
+    struct list client_fds;
 
     int max_fd;
     fd_set fds_before_select;
@@ -52,8 +51,6 @@ static struct server create_server(int port) {
 
     return serv;
 }
-
-
 
 static int setup_listen_socket(int port) {
     // Create the socket file descriptor
@@ -98,18 +95,16 @@ static void wait_on_select_and_update_fds(struct server *self) {
 
 
 static void accept_client(struct server *self) {
-    if (FD_ISSET(self->listen_fd, &self->fds_after_select) && 
-        self->number_of_clients < MAX_NUM_CONNECTIONS) {
+    if (FD_ISSET(self->listen_fd, &self->fds_after_select)) {
         int client_fd = accept(self->listen_fd, NULL, 0);
 
         if (client_fd < 0) {
             perror("Errow with accept()");
             exit(1);
         }
-        
-        self->client_fds[self->number_of_clients] = client_fd;
-        self->number_of_clients++;
 
+        append(&self->client_fds, client_fd);
+        
         if (client_fd > self->max_fd) {
             self->max_fd = client_fd;
             FD_SET(client_fd, &self->fds_before_select);
@@ -120,8 +115,8 @@ static void accept_client(struct server *self) {
 }
 
 static void handle_incoming_data(struct server *self) {
-    for (int i = 0; i < self->number_of_clients; i++) {
-        int current_fd = self->client_fds[i];
+    for (int i = 0; i < size(&self->client_fds); i++) {
+        int current_fd = element_at(&self->client_fds, i);
 
         if (FD_ISSET(current_fd, &self->fds_after_select)) {
             char data[MSG_BUF_SIZE];
@@ -143,12 +138,12 @@ static void handle_incoming_data(struct server *self) {
 }
 
 static void send_to_all_except(struct server *self, char data[], int len, int except_index) {
-    for (int i = 0; i < self->number_of_clients; i++) {
+    for (int i = 0; i < size(&self->client_fds); i++) {
         if (i == except_index) {
             continue;
         }
 
-        int current_fd = (self->client_fds)[i];
+        int current_fd = element_at(&self->client_fds, i);
         ssize_t send_len = send(current_fd, data, len, 0);
 
         if (send_len < 0) {

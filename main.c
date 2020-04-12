@@ -13,16 +13,6 @@
 
 
 int main(int argc, char *argv[]) {
-    struct list lst = create_list();
-    append(&lst, 5);
-    append(&lst, 4);
-    append(&lst, 2);
-    delete_element_at(&lst, 1);
-
-    printf("%d\n", element_at(&lst, 1));
-
-    return 0;
-
     if (argc == 2) {
         char *port_string = argv[1];
         int port = strtol(port_string, NULL, 10);

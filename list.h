@@ -12,8 +12,10 @@ struct list {
 };
 
 struct list create_list();
-void insert(struct list *self, int value);
+void append(struct list *self, int value);
 int contains(struct list *self, int value);
 int size(struct list *self);
+int element_at(struct list *self, int index);
+void delete_element_at(struct list *self, int index);
 
 #endif // Header guard

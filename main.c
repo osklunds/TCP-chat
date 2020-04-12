@@ -14,9 +14,12 @@
 
 int main(int argc, char *argv[]) {
     struct list lst = create_list();
-    insert(&lst, 2);
+    append(&lst, 5);
+    append(&lst, 4);
+    append(&lst, 2);
+    delete_element_at(&lst, 1);
 
-    printf("%d\n", size(&lst));
+    printf("%d\n", element_at(&lst, 1));
 
     return 0;
 

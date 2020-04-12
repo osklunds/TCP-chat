@@ -27,6 +27,7 @@ static int setup_listen_socket(int port);
 static void wait_on_select_and_update_fds(struct server *self);
 static void accept_client(struct server *self);
 static void handle_incoming_data(struct server *self);
+static void close_connection_for_index(struct server *self, int index);
 static void send_to_all_except(struct server *self, char data[], int len, int except_index);
 
 
@@ -92,8 +93,6 @@ static void wait_on_select_and_update_fds(struct server *self) {
     }
 }
 
-
-
 static void accept_client(struct server *self) {
     if (FD_ISSET(self->listen_fd, &self->fds_after_select)) {
         int client_fd = accept(self->listen_fd, NULL, 0);
@@ -129,12 +128,33 @@ static void handle_incoming_data(struct server *self) {
             }
 
             if (len == 0) {
-                // TODO: Close connection
+                close_connection_for_index(self, i);
+            } else {
+                send_to_all_except(self, data, len, i);
             }
-
-            send_to_all_except(self, data, len, i);
         }
     }
+}
+
+static void close_connection_for_index(struct server *self, int index) {
+    delete_element_at(&self->client_fds, index);
+
+    self->max_fd = self->listen_fd;
+
+    FD_ZERO(&self->fds_before_select);
+    FD_SET(self->listen_fd, &self->fds_before_select);
+
+    for (int i = 0; i < size(&self->client_fds); i++) {
+        int current_fd = element_at(&self->client_fds, i);
+        
+        if (current_fd > self->max_fd) {
+            self->max_fd = current_fd;
+        }
+
+        FD_SET(current_fd, &self->fds_before_select);
+    }
+
+    printf("Closed a connection\n");
 }
 
 static void send_to_all_except(struct server *self, char data[], int len, int except_index) {
@@ -152,7 +172,8 @@ static void send_to_all_except(struct server *self, char data[], int len, int ex
         }
 
         if (send_len == 0) {
-            // TODO: Close connection
+            close_connection_for_index(self, i);
+            i--; // To compensate for the deleted fd in the list
         }
     }
 }

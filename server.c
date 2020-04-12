@@ -58,7 +58,12 @@ static int setup_listen_socket(int port) {
     int fd = socket(AF_INET, SOCK_STREAM, 0);
 
     if (fd < 0) {
-        perror("socket() failed.");
+        perror("socket() failed");
+        exit(1);
+    }
+
+    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0) {
+        perror("setsockopt() failed");
         exit(1);
     }
 

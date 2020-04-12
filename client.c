@@ -95,7 +95,8 @@ static void handle_incoming_data(struct client *self) {
         }
 
         if (len == 0) {
-            // TODO: Close connection
+            printf("Server has quit, so I'm also quitting.\n");
+            exit(0);
         }
 
         data[len] = 0;
@@ -132,7 +133,8 @@ static void handle_user_input(struct client *self) {
         }
 
         if (send_len == 0) {
-            // TODO: Close connection
+            printf("Server has quit, so I'm also quitting.\n");
+            exit(0);
         }
     }
 }

@@ -6,6 +6,7 @@ This is a small command line chat program based on TCP.
 ## Instructions
 
 - To compile, type `make`.
+- To clean build files, type `make clean`.
 - To run the server-side, type `./program.o PORT` where `PORT` is the TCP port the server listens on.
 - To run the client-side, type `./program.o IP PORT NAME` where `IP` is the ip-address of the computer running the server, `PORT` is the TCP port the server is configured to listen to, and `NAME` the name you want this client to have in the chat. *The server must be started before the clients.*
 - Exit a server or a client with ctrl-c.
@@ -37,3 +38,7 @@ Alice: Is it time for tea?
 Bob: I don't think so, but let's hear what Charlie has to say.
 It's always time for tea.
 ```
+
+## Compatibility
+
+This program was developed on Mac (macOS 10.14), but it should also work fine on Linux.

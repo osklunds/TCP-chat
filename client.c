@@ -85,7 +85,7 @@ static void wait_on_select_and_update_fds(struct client *self) {
 
 static void handle_incoming_data(struct client *self) {
     if (FD_ISSET(self->server_fd, &self->fds_after_select)) {
-        char data[MSG_BUF_SIZE];
+        char data[MSG_BUF_SIZE+1];
 
         int len = recv(self->server_fd, data, MSG_BUF_SIZE, 0);
 
@@ -107,7 +107,7 @@ static void handle_incoming_data(struct client *self) {
 
 static void handle_user_input(struct client *self) {
     if (FD_ISSET(STDIN_FILENO, &self->fds_after_select)) {
-        char data[MSG_BUF_SIZE];
+        char data[MSG_BUF_SIZE+1];
 
         int len = read(STDIN_FILENO, data, MSG_BUF_SIZE);
 

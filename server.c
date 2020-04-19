@@ -123,16 +123,15 @@ static void handle_incoming_data(struct server *self) {
         int current_fd = element_at(&self->client_fds, i);
 
         if (FD_ISSET(current_fd, &self->fds_after_select)) {
-            char data[MSG_BUF_SIZE];
+            char data[MSG_BUF_SIZE+1];
 
             int len = recv(current_fd, data, MSG_BUF_SIZE, 0);
+            data[len] = 0;
 
             if (len < 0) {
                 perror("Error with recv().");
                 exit(1);
-            }
-
-            if (len == 0) {
+            } else if (len == 0) {
                 close_connection_for_index(self, i);
             } else {
                 send_to_all_except(self, data, len, i);

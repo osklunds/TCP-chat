@@ -21,6 +21,7 @@ int main(int argc, char *argv[]) {
         run_server_program(port);
     } else if (argc == 4) {
         struct sockaddr_in sa;
+        memset(&sa, 0, sizeof(sa));
 
         char *ip_string = argv[1];
         inet_pton(AF_INET, ip_string, &(sa.sin_addr));
@@ -29,6 +30,8 @@ int main(int argc, char *argv[]) {
         int port = strtol(port_string, NULL, 10);
         port = htons(port);
         sa.sin_port = port;
+
+        sa.sin_family = AF_INET;
 
         char *name = argv[3];
 

@@ -117,22 +117,24 @@ static void handle_user_input(struct client *self) {
         }
 
         data[len] = 0;
-        
+
         char data_to_send[MSG_BUF_SIZE];
-        strlcpy(data_to_send, self->name, MSG_BUF_SIZE);
-        strlcat(data_to_send, ": ", MSG_BUF_SIZE);
-        strlcat(data_to_send, data, MSG_BUF_SIZE);
+        int to_send_len = snprintf(data_to_send, MSG_BUF_SIZE, "%s: %s", self->name, data);
 
-        len = strlen(data_to_send);
+        if (to_send_len >= MSG_BUF_SIZE) {
+            return;
+            // To avoid problems missing '\n' char.
+            // Tests with equality to include the null terminator.
+        }
         
-        ssize_t send_len = send(self->server_fd, data_to_send, len, 0);
+        int sent_len = send(self->server_fd, data_to_send, to_send_len, 0);
 
-        if (send_len < 0) {
+        if (sent_len < 0) {
             perror("Error with send().");
             exit(1);
         }
 
-        if (send_len == 0) {
+        if (sent_len == 0) {
             printf("Server has quit, so I'm also quitting.\n");
             exit(0);
         }
